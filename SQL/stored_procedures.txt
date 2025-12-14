@@ -1,0 +1,66 @@
+CREATE PROCEDURE `sp_get_datasets_by_disease`(IN p_abbr VARCHAR(10))
+BEGIN
+  SELECT 
+	  d.disease_name,
+      d.disease_abbr,
+      ds.GEO_ID,
+      ds.data_type,
+      ds.file_format
+  FROM disease AS d
+  JOIN dataset AS ds
+    ON ds.disease_ID = d.disease_ID
+  WHERE d.disease_abbr = p_abbr;
+END
+
+CREATE PROCEDURE `sp_get_interactions_by_disease`(IN p_abbr VARCHAR(10))
+BEGIN
+select 
+	ds.disease_name,
+    sec.gene_symbol AS secretory_protein,
+    rep.gene_symbol AS receptor,
+    inter.functions AS interaction,
+    ref.PMID
+FROM disease as ds
+JOIN interaction as inter
+	ON ds.disease_ID = inter.disease_ID
+JOIN secretory_protein as sec
+	ON inter.secretory_protein_ID = sec.secretory_protein_ID
+JOIN receptor as rep
+	ON rep.receptor_ID = inter.receptor_ID
+JOIN ref_list as ref
+	ON ref.interaction_ID = inter.interaction_ID
+WHERE ds.disease_abbr = p_abbr;
+END
+
+CREATE PROCEDURE `sp_get_model_evaluations_by_dataset`(IN GEO_ID VARCHAR(45))
+BEGIN
+select 
+	dataset.GEO_ID,
+    ds.disease_name,
+    cm.model_type,
+    cm.sensitivity,
+    cm.specificity,
+    cm.pos_pred_value,
+    cm.neg_pred_value,
+    cm.precisions,
+    cm.recall,
+    cm.balanced_accuracy
+FROM disease as ds
+JOIN dataset ON ds.disease_ID = dataset.disease_ID
+JOIN confusion_matrix as cm ON cm.dataset_ID = dataset.dataset_ID
+WHERE dataset.GEO_ID = GEO_ID;
+END
+
+CREATE PROCEDURE `sp_get_potential_proteins_by_disease`(IN p_abbr VARCHAR(10))
+BEGIN
+select 
+	ds.disease_name,
+	pp.gene_symbol,
+	pp.protein_type,
+	pp.functions,
+	pp.sources
+FROM disease as ds
+JOIN potential_protein as pp
+	ON ds.disease_ID = pp.disease_ID
+WHERE ds.disease_abbr = p_abbr;
+END
